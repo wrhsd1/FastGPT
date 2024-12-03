@@ -1,4 +1,4 @@
-name: 11Build FastGPT images in Personal warehouseqqq
+name: Build FastGPT images
 on:
   workflow_dispatch:
   push:
@@ -16,10 +16,15 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
           driver-opts: network=host
+
+      - name: Create cache directory
+        run: mkdir -p /tmp/.buildx-cache
+
       - name: Cache Docker layers
         uses: actions/cache@v3
         with:
@@ -27,18 +32,29 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
+
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
-      - name: Build and publish image for main branch or tag push event
+
+      - name: Build and publish image
         run: |
-          docker buildx build \
-          --build-arg name=app \
-          --push \
-          --cache-from=type=local,src=/tmp/.buildx-cache \
-          --cache-to=type=local,dest=/tmp/.buildx-cache \
-          -t wrhsd/fastgpt:1202 \
-          -f Dockerfile \
-          .
+          # Verify Dockerfile exists
+          ls -la
+          
+          # Build if Dockerfile is in root
+          if [ -f "Dockerfile" ]; then
+            docker buildx build \
+            --build-arg name=app \
+            --push \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache \
+            -t wrhsd/fastgpt:1202 \
+            -f Dockerfile \
+            .
+          else
+            echo "Error: Dockerfile not found in root directory"
+            exit 1
+          fi
