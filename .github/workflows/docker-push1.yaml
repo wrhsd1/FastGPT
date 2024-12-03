@@ -1,4 +1,4 @@
-name: Build FastGPT images in Personal warehouse
+name: Build FastGPT images in Personal warehouseqqq
 on:
   workflow_dispatch:
   push:
@@ -38,6 +38,6 @@ jobs:
           --push \
           --cache-from=type=local,src=/tmp/.buildx-cache \
           --cache-to=type=local,dest=/tmp/.buildx-cache \
-          -t wrhsd/fastgpt:1203 \
+          -t wrhsd/fastgpt:1202 \
           -f Dockerfile \
           .
