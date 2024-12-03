@@ -1,4 +1,4 @@
-name: Build FastGPT images in Personal warehouseqqq
+name: 11Build FastGPT images in Personal warehouseqqq
 on:
   workflow_dispatch:
   push:
@@ -10,6 +10,7 @@ on:
 jobs:
   build-fastgpt-images:
     runs-on: ubuntu-20.04
+    if: github.repository != 'labring/FastGPT'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -17,6 +18,8 @@ jobs:
           fetch-depth: 0
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+        with:
+          driver-opts: network=host
       - name: Cache Docker layers
         uses: actions/cache@v3
         with:
@@ -31,10 +34,10 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
       - name: Build and publish image for main branch or tag push event
         run: |
-          docker buildx create --use
           docker buildx build \
-          --platform linux/amd64,linux/arm64 \
           --build-arg name=app \
+          --label "org.opencontainers.image.source=https://github.com/${{ github.repository_owner }}/FastGPT" \
+          --label "org.opencontainers.image.description=fastgpt image" \
           --push \
           --cache-from=type=local,src=/tmp/.buildx-cache \
           --cache-to=type=local,dest=/tmp/.buildx-cache \
